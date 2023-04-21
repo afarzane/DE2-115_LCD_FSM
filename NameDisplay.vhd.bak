@@ -1,0 +1,88 @@
+
+------------------------ Debouncer -----------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+entity debouncer is
+	port(
+	clk : IN std_logic;
+	KEY : IN std_logic_vector(3 downto 0);
+	KEY_OUT : OUT std_logic_vector(3 downto 0)
+	);
+
+end entity;
+
+architecture debouncing of debouncer is
+
+	signal s0, s1, s2 : std_logic_vector(3 downto 0);
+
+begin
+
+	process(clk)
+	begin
+			
+		if (rising_edge(clk)) then
+		
+			s0 <= KEY;
+			S1 <= S0;
+			S2 <= S1;
+			
+		end if;
+		
+	end process;
+	
+	KEY_OUT <= s0 and s1 and s2;
+
+end architecture;
+
+
+------------------------ Displayer -----------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+entity NameDisplay is
+
+	port(
+	
+		KEY : IN std_logic_vector(3 downto 0);
+		SW : IN std_logic_vector(17 downto 0);
+		CLOCK_50 : IN std_logic;
+		
+		LEDG : OUT std_logic_vector(4 downto 0);
+		LCD_EN, LCD_RS, LCD_RW, LCD_ON, LCD_BLON : OUT std_logic;
+		LCD_DATA : OUT std_logic_vector(7 downto 0)
+		
+		);
+
+end entity;
+
+
+architecture statemachine of NameDisplay is
+	
+	signal d0 : std_logic_vector(3 downto 0);
+
+begin
+	
+	inst_debouncer : entity work.debouncer(debouncing)
+		port map(
+		
+			KEY => KEY,
+			KEY_OUT => d0,
+			clk => CLOCK_50
+		
+		);
+	
+	LCD_BLON <= '1'; -- backlight is always on
+	LCD_ON <= '1'; -- LCD is always on
+	LCD_EN <= d0(0);
+	LCD_RW <= '0'; -- always writing to the LCD
+	LCD_RS <= SW(8);
+	LEDG(0) <= d0(0); -- send the clock to a green light
+	LEDG(4) <= d0(2); -- reset light to green
+
+
+	
+	
+end architecture;
